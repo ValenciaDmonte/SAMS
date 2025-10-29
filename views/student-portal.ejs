@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Portal - SAMS</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  /* ========== HEADER ========== */
+  header {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 2px solid #f0f0f0;
+  }
+
+  .logo-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .logo-icon {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  h1 {
+    font-size: 24px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+  }
+
+  #logoutBtn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #logoutBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+
+  /* ========== CONTAINER ========== */
+  .container {
+    max-width: 1400px;
+    margin: 30px auto;
+    padding: 0 30px;
+  }
+
+  /* ========== TABS ========== */
+  .tabs {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 8px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(10px);
+    width: fit-content;
+  }
+
+  .tab {
+    padding: 14px 32px;
+    background: transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: none;
+  }
+
+  .tab:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+  }
+
+  .tab.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  .section {
+    display: none;
+  }
+
+  .section.active {
+    display: block;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ========== SECTION HEADERS ========== */
+  .section-header {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 25px 30px;
+    border-radius: 16px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .section-header h2 {
+    font-size: 28px;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  #exportCSVBtn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #exportCSVBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  }
+
+  /* ========== TIMETABLE ========== */
+  .table-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 18px 20px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  th {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    color: #475569;
+    font-size: 14px;
+  }
+
+  tbody tr {
+    transition: all 0.2s ease;
+    background: white;
+  }
+
+  tbody tr:hover {
+    background: rgba(102, 126, 234, 0.05);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ========== CHARTS ========== */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+  }
+
+  .chart-card {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  }
+
+  .chart-card h3 {
+    color: #1e293b;
+    margin-bottom: 15px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .chart-card canvas {
+    max-height: 300px;
+  }
+
+  canvas {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 300px !important;
+  }
+
+  /* ========== DEFAULTER CARD ========== */
+  #defaulterCard {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 16px;
+    margin: 30px 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    text-align: center;
+  }
+
+  #defaulterCard h3 {
+    color: #1e293b;
+    margin-bottom: 15px;
+    font-size: 20px;
+  }
+
+  #defaulterText {
+    font-size: 16px;
+    color: #475569;
+    margin-bottom: 15px;
+    line-height: 1.6;
+  }
+
+  #defaulterGauge {
+    max-width: 220px;
+    max-height: 220px;
+    margin: 0 auto;
+  }
+
+  /* ========== SUBJECT DEFAULTERS ========== */
+  #subjectDefaulters {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+  }
+
+  .defCard {
+    border-radius: 16px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .defCard::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+  }
+
+  .defCard:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+  }
+
+  .safe {
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  }
+
+  .warning {
+    background: linear-gradient(135deg, #fefce8, #fef3c7);
+  }
+
+  .risk {
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  }
+
+  .defCard h4 {
+    color: #1e293b;
+    margin-bottom: 12px;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .defCard canvas {
+    width: 140px !important;
+    height: 140px !important;
+    margin: 12px auto;
+  }
+
+  .defCard p {
+    margin-top: 10px;
+    font-weight: 600;
+    color: #475569;
+    font-size: 14px;
+  }
+
+  /* ========== CHATBOT ========== */
+  #chatbot {
+    position: fixed;
+    bottom: 90px;
+    right: 30px;
+    width: 380px;
+    height: 540px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1000;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .chatbot-header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 20px;
+    font-weight: 600;
+    font-size: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .chatbot-header button {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .chatbot-header button:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .chatbot-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #f8fafc;
+  }
+
+  .chatbot-messages::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .chatbot-messages::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .chatbot-messages::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+
+  .user-msg, .bot-msg {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    line-height: 1.5;
+    font-size: 14px;
+    word-wrap: break-word;
+  }
+
+  .user-msg {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  }
+
+  .bot-msg {
+    background: white;
+    color: #1e293b;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .typing {
+    font-style: italic;
+    color: #94a3b8;
+  }
+
+  .chatbot-input {
+    display: flex;
+    border-top: 1px solid #e2e8f0;
+    background: white;
+  }
+
+  .chatbot-input input {
+    flex: 1;
+    border: none;
+    padding: 18px 20px;
+    outline: none;
+    font-size: 14px;
+    font-family: inherit;
+  }
+
+  .chatbot-input button {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 18px 24px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.2s ease;
+  }
+
+  .chatbot-input button:hover {
+    background: linear-gradient(135deg, #5a67d8, #6b3fa0);
+  }
+
+  #chatToggle {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 64px;
+    height: 64px;
+    font-size: 28px;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+  }
+
+  #chatToggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+  }
+
+  /* ========== RESPONSIVE ========== */
+  @media (max-width: 1024px) {
+    .chart-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    header {
+      padding: 15px 20px;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    h1 {
+      font-size: 18px;
+    }
+
+    .container {
+      padding: 0 15px;
+    }
+
+    .tabs {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .tab {
+      padding: 12px 20px;
+      font-size: 14px;
+    }
+
+    .section-header {
+      flex-direction: column;
+      gap: 15px;
+      align-items: flex-start;
+    }
+
+    #chatbot {
+      width: calc(100% - 30px);
+      right: 15px;
+      bottom: 80px;
+    }
+
+    #chatToggle {
+      right: 15px;
+      bottom: 15px;
+    }
+
+    #subjectDefaulters {
+      grid-template-columns: 1fr;
+    }
+
+    table {
+      font-size: 12px;
+    }
+
+    th, td {
+      padding: 12px 10px;
+    }
+  }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-section">
+      
+      <h1>SAMS Student Portal</h1>
+    </div>
+    <button id="logoutBtn">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+  </header>
+
+  <div class="container">
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-target="timetable">
+        <i class="far fa-calendar"></i> Timetable
+      </button>
+      <button class="tab" data-target="analytics">
+        <i class="fas fa-chart-line"></i> Analytics
+      </button>
+    </div>
+
+    <!-- Timetable Section -->
+    <div id="timetable" class="section active">
+      <div class="section-header">
+        <h2><i class="far fa-calendar-alt"></i> Weekly Timetable</h2>
+      </div>
+      <div class="table-container">
+        <table id="timetableTable">
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>Start Time</th>
+              <th>End Time</th>
+              <th>Subject</th>
+              <th>Teacher</th>
+              <th>Mode</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Analytics Section -->
+    <div id="analytics" class="section">
+      <div class="section-header">
+        <h2><i class="fas fa-chart-bar"></i> Attendance Analytics</h2>
+        <button id="exportCSVBtn">
+          <i class="fas fa-download"></i> Export CSV
+        </button>
+      </div>
+
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3><i class="fas fa-book"></i> Subject-wise Attendance</h3>
+          <canvas id="subjectChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3><i class="fas fa-calendar-check"></i> Monthly Attendance</h3>
+          <canvas id="monthChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3><i class="fas fa-chart-pie"></i> Attendance Summary</h3>
+          <canvas id="summaryChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3><i class="fas fa-calendar-week"></i> Day-wise Pattern</h3>
+          <canvas id="daywiseChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3><i class="fas fa-chalkboard-teacher"></i> Teacher-wise Attendance</h3>
+        <canvas id="teacherChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3><i class="fas fa-chart-line"></i> Weekly Attendance Trend</h3>
+        <canvas id="trendChart"></canvas>
+      </div>
+
+      <div id="defaulterCard">
+        <h3><i class="fas fa-bullseye"></i> Defaulter Risk Prediction</h3>
+        <p id="defaulterText"></p>
+        <canvas id="defaulterGauge"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3><i class="fas fa-graduation-cap"></i> Subject-wise Defaulter Overview</h3>
+        <div id="subjectDefaulters"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chatbot -->
+  <div id="chatbot">
+    <div class="chatbot-header">
+      <span><i class="fas fa-robot"></i> SAMS Assistant</span>
+      <button id="closeChat">✕</button>
+    </div>
+    <div id="chatMessages" class="chatbot-messages">
+      <div class="bot-msg">
+        Hello! 👋 I'm your SAMS assistant.<br><br>
+        You can ask me things like:<br>
+        <i>"How many more lectures to reach 75% in DC?"</i>
+      </div>
+    </div>
+    <div class="chatbot-input">
+      <input type="text" id="chatInput" placeholder="Ask about your attendance..." />
+      <button id="chatSend">➤</button>
+    </div>
+  </div>
+
+  <button id="chatToggle">💬</button>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = '/student';
+
+    // Tab navigation
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+        document.getElementById(tab.dataset.target).classList.add('active');
+      });
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.clear();
+      alert('Logged out successfully!');
+      window.location.href = '/student';
+    });
+
+    async function fetchJSON(url) {
+      const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+      if (res.status === 403) {
+        alert('Session expired! Please login again.');
+        localStorage.clear();
+        window.location.href = '/student';
+      }
+      return res.json();
+    }
+
+    async function loadTimetable() {
+      const data = await fetchJSON('/api/student/timetable');
+      const tbody = document.querySelector('#timetableTable tbody');
+      tbody.innerHTML = '';
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row.day_of_week}</td>
+          <td>${row.start_time}</td>
+          <td>${row.end_time}</td>
+          <td>${row.subject_title}</td>
+          <td>${row.teacher_name}</td>
+          <td>${row.mode}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function loadAnalytics() {
+      const [
+        subjects, months, summary, daywise, teacherwise,
+        trend, defaulter, subjectDefaulters
+      ] = await Promise.all([
+        fetchJSON('/api/student/attendance/subjectwise'),
+        fetchJSON('/api/student/attendance/monthwise'),
+        fetchJSON('/api/student/attendance/summary'),
+        fetchJSON('/api/student/attendance/daywise'),
+        fetchJSON('/api/student/attendance/teacherwise'),
+        fetchJSON('/api/student/attendance/trend'),
+        fetchJSON('/api/student/attendance/defaulter'),
+        fetchJSON('/api/student/attendance/defaulter/subjectwise')
+      ]);
+
+      // Subjectwise chart
+      new Chart(document.getElementById('subjectChart'), {
+        type: 'bar',
+        data: {
+          labels: subjects.map(s => s.subject_title),
+          datasets: [{ label: 'Attendance %', data: subjects.map(s => s.attendance_percentage), backgroundColor: '#6366f1' }]
+        },
+        options: { scales: { y: { beginAtZero: true, max: 100 } } }
+      });
+
+      // Monthwise
+      new Chart(document.getElementById('monthChart'), {
+        type: 'line',
+        data: {
+          labels: months.map(m => m.month.trim()),
+          datasets: [{ label: 'Monthly Attendance %', data: months.map(m => m.attendance_percentage), borderColor: '#10b981', fill: false, tension: 0.3 }]
+        },
+        options: { scales: { y: { beginAtZero: true, max: 100 } } }
+      });
+
+      // Summary pie
+      const present = summary.present_count || 0;
+      const total = summary.total_classes || 1;
+      const absent = total - present;
+      new Chart(document.getElementById('summaryChart'), {
+        type: 'pie',
+        data: { labels: ['Present', 'Absent'], datasets: [{ data: [present, absent], backgroundColor: ['#4f46e5', '#d1d5db'] }] }
+      });
+
+      // Daywise
+      new Chart(document.getElementById('daywiseChart'), {
+        type: 'bar',
+        data: { labels: daywise.map(d => d.day_name.trim()), datasets: [{ label: 'Attendance %', data: daywise.map(d => d.attendance_percentage), backgroundColor: '#8b5cf6' }] },
+        options: { scales: { y: { beginAtZero: true, max: 100 } } }
+      });
+
+      // Teacherwise
+      new Chart(document.getElementById('teacherChart'), {
+        type: 'bar',
+        data: { labels: teacherwise.map(t => t.teacher_name), datasets: [{ label: 'Attendance %', data: teacherwise.map(t => t.attendance_percentage), backgroundColor: '#fbbf24' }] },
+        options: { indexAxis: 'y', scales: { x: { beginAtZero: true, max: 100 } } }
+      });
+
+      // Weekly Trend
+      new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: { labels: trend.map(d => d.week_start), datasets: [{ label: 'Weekly Attendance %', data: trend.map(d => d.attendance_percentage), borderColor: '#ef4444', tension: 0.3 }] },
+        options: { scales: { y: { beginAtZero: true, max: 100 } } }
+      });
+
+      // Defaulter Gauge
+      const percent = defaulter.attendance_percentage;
+      const needed = defaulter.lectures_to_attend;
+      document.getElementById('defaulterText').innerHTML = `
+        Current Attendance: <b>${percent}%</b><br>
+        ${needed === 0 ? '✅ You are Safe!' : `📘 Attend next <b>${needed}</b> lectures to stay above 75%.`}
+      `;
+      new Chart(document.getElementById('defaulterGauge'), {
+        type: 'doughnut',
+        data: { labels: ['Attended', 'Remaining'], datasets: [{ data: [percent, 100 - percent], backgroundColor: percent >= 75 ? ['#4ade80', '#e5e7eb'] : ['#f87171', '#e5e7eb'], borderWidth: 0 }] },
+        options: { cutout: '70%', plugins: { legend: { display: false } } }
+      });
+
+      // Subject-wise Defaulter Cards
+      const container = document.getElementById('subjectDefaulters');
+      container.innerHTML = '';
+      subjectDefaulters.forEach((sub, i) => {
+        const card = document.createElement('div');
+        card.className = 'defCard';
+        const canvas = document.createElement('canvas');
+        canvas.id = `subGauge${i}`;
+        card.innerHTML = `<h4>${sub.subject_name}</h4>`;
+        card.appendChild(canvas);
+        card.innerHTML += `<p>${sub.attendance_percentage}% - ${sub.lectures_to_attend === 0 ? '✅ Safe' : `📘 ${sub.lectures_to_attend} more`}</p>`;
+        container.appendChild(card);
+
+        new Chart(canvas, {
+          type: 'doughnut',
+          data: { labels: ['Attended', 'Remaining'], datasets: [{ data: [sub.attendance_percentage, 100 - sub.attendance_percentage], backgroundColor: sub.attendance_percentage >= 75 ? ['#22c55e', '#e5e7eb'] : ['#f87171', '#e5e7eb'], borderWidth: 0 }] },
+          options: { cutout: '70%', plugins: { legend: { display: false } } }
+        });
+      });
+    }
+
+    loadTimetable();
+    loadAnalytics();
+
+    // Export CSV Logic
+    document.getElementById('exportCSVBtn').addEventListener('click', () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Session expired! Please login again.');
+        window.location.href = '/student';
+        return;
+      }
+      window.open('/api/student/attendance/export?token=' + token, '_blank');
+    });
+
+    // Chatbot Logic
+    const chatToggle = document.getElementById('chatToggle');
+    const chatbot = document.getElementById('chatbot');
+    const closeChat = document.getElementById('closeChat');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const chatSend = document.getElementById('chatSend');
+
+    chatToggle.addEventListener('click', () => {
+      chatbot.style.display = 'flex';
+      chatToggle.style.display = 'none';
+    });
+
+    closeChat.addEventListener('click', () => {
+      chatbot.style.display = 'none';
+      chatToggle.style.display = 'flex';
+    });
+
+    function appendMessage(sender, text) {
+      const msg = document.createElement('div');
+      msg.className = sender === 'user' ? 'user-msg' : 'bot-msg';
+      msg.innerHTML = text;
+      chatMessages.appendChild(msg);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    chatSend.addEventListener('click', sendChat);
+    chatInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendChat(); });
+
+    async function sendChat() {
+      const question = chatInput.value.trim();
+      if (!question) return;
+      
+      appendMessage('user', question);
+      chatInput.value = '';
+
+      const typingMsg = document.createElement('div');
+      typingMsg.className = 'bot-msg typing';
+      typingMsg.innerText = 'Typing...';
+      chatMessages.appendChild(typingMsg);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      try {
+        const res = await fetch('/api/student/chatbot', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json', 
+            'Authorization': 'Bearer ' + token 
+          },
+          body: JSON.stringify({ question })
+        });
+
+        const data = await res.json();
+        typingMsg.remove();
+        appendMessage('bot', data.reply);
+      } catch (err) {
+        typingMsg.remove();
+        appendMessage('bot', '⚠️ Sorry, I\'m having trouble connecting right now.');
+      }
+    }
+  </script>
+</body>
+</html>

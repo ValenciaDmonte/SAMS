@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Portal - SAMS</title>
+  <link rel="stylesheet" href="/css/admin-portal.css">
+</head>
+<body>
+  <div class="main-container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🎓 Admin Portal - SAMS</h1>
+      <div class="user-info">
+        <span>Logged in as: <b id="username"></b></span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <!-- Dashboard Stats -->
+    <div class="dashboard">
+      <h2>📊 Dashboard Overview</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Students</h3>
+          <div class="stat-value" id="stat-students">0</div>
+        </div>
+        <div class="stat-card">
+          <h3>Teachers</h3>
+          <div class="stat-value" id="stat-teachers">0</div>
+        </div>
+        <div class="stat-card">
+          <h3>Classes</h3>
+          <div class="stat-value" id="stat-classes">0</div>
+        </div>
+        <div class="stat-card">
+          <h3>Subjects</h3>
+          <div class="stat-value" id="stat-subjects">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('students')">👨‍🎓 Students</button>
+      <button onclick="switchTab('teachers')">👩‍🏫 Teachers</button>
+      <button onclick="switchTab('classes')">🏫 Classes</button>
+      <button onclick="switchTab('subjects')">📚 Subjects</button>
+      <button onclick="switchTab('classsubject')">🔗 Class–Subject</button>
+      <button onclick="switchTab('teacherclasses')">👨‍🏫📚 Teacher–Subject</button>
+      <button onclick="switchTab('timetable')">🗓️ Timetable</button>
+    </div>
+
+    <!-- STUDENTS TAB -->
+    <div id="students-tab" class="tab active">
+      <div class="content-card">
+        <h2>👨‍🎓 Student Management</h2>
+        <form id="student-form">
+          <input name="name" placeholder="Full Name" required />
+          <input name="roll_no" placeholder="Roll No" required />
+          <input name="batch" placeholder="Batch" required />
+          <input name="dept" placeholder="Department" required />
+          <input name="email" placeholder="Email" />
+          <label for="class_id">Class:</label>
+          <select name="class_id" id="student-class-dropdown" required>
+            <option value="">Select Class</option>
+          </select>
+          <div>
+            <button type="submit">Register Student</button>
+            <button type="button" id="student-cancel" onclick="cancelEdit('student')" style="display:none;">Cancel Edit</button>
+          </div>
+        </form>
+        <div id="students-list"></div>
+      </div>
+    </div>
+
+    <!-- TEACHERS TAB -->
+    <div id="teachers-tab" class="tab">
+      <div class="content-card">
+        <h2>👩‍🏫 Teacher Management</h2>
+        <form id="teacher-form" onsubmit="registerTeacher(event)">
+          <input name="name" placeholder="Full Name" required />
+          <input name="department" placeholder="Department" required />
+          <input name="email" placeholder="Email" />
+          <input name="username" placeholder="Username" required />
+          <input name="password" type="password" placeholder="Password" required />
+          <div>
+            <button type="submit">Register Teacher</button>
+            <button type="button" id="teacher-cancel" onclick="cancelEdit('teacher')" style="display:none;">Cancel Edit</button>
+          </div>
+        </form>
+        <div id="teachers-list"></div>
+      </div>
+    </div>
+
+    <!-- CLASSES TAB -->
+    <div id="classes-tab" class="tab">
+      <div class="content-card">
+        <h2>🏫 Class Management</h2>
+        <form id="class-form" onsubmit="createClass(event)">
+          <input name="name" placeholder="Class Name" required />
+          <input name="term" placeholder="Term" required />
+          <input name="section" placeholder="Section" />
+          <div>
+            <button type="submit">Create Class</button>
+            <button type="button" id="class-cancel" onclick="cancelEdit('class')" style="display:none;">Cancel Edit</button>
+          </div>
+        </form>
+        <div id="classes-list"></div>
+      </div>
+    </div>
+
+    <!-- SUBJECTS TAB -->
+    <div id="subjects-tab" class="tab">
+      <div class="content-card">
+        <h2>📚 Subject Management</h2>
+        <form id="subject-form" onsubmit="createSubject(event)">
+          <input name="code" placeholder="Subject Code" required />
+          <input name="title" placeholder="Subject Title" required />
+          <div>
+            <button type="submit">Create Subject</button>
+            <button type="button" id="subject-cancel" onclick="cancelEdit('subject')" style="display:none;">Cancel Edit</button>
+          </div>
+        </form>
+        <div id="subjects-list"></div>
+      </div>
+    </div>
+
+    <!-- CLASS-SUBJECT TAB -->
+    <div id="classsubject-tab" class="tab">
+      <div class="content-card">
+        <h2>🔗 Class–Subject Mapping</h2>
+        <form id="classsubject-form" onsubmit="addClassSubject(event)">
+          <select name="class_id" id="class-dropdown" required>
+            <option value="">Select Class</option>
+          </select>
+          <select name="subject_id" id="subject-dropdown" required>
+            <option value="">Select Subject</option>
+          </select>
+          <button type="submit">Assign Subject to Class</button>
+        </form>
+        <div id="classsubject-list"></div>
+      </div>
+    </div>
+
+    <!-- TEACHER-SUBJECT TAB -->
+    <div id="teacherclasses-tab" class="tab">
+      <div class="content-card">
+        <h2>👨‍🏫📚 Teacher–Subject Assignment</h2>
+        <form id="teacherclasses-form" onsubmit="addTeacherSubject(event)">
+          <select name="teacher_id" id="teacher-dropdown" required>
+            <option value="">Select Teacher</option>
+          </select>
+          <select name="cs_id" id="cs-dropdown" required>
+            <option value="">Select Class–Subject</option>
+          </select>
+          <button type="submit">Assign Teacher to Subject</button>
+        </form>
+        <div id="teacherclasses-list"></div>
+      </div>
+    </div>
+
+    <!-- TIMETABLE TAB -->
+    <div id="timetable-tab" class="tab">
+      <div class="content-card">
+        <h2>🗓️ Weekly Timetable Management</h2>
+        <form id="timetableForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ts_id">Teacher–Subject</label>
+              <select id="ts_id" required></select>
+            </div>
+            <div class="form-group">
+              <label for="day_of_week">Day of Week</label>
+              <select id="day_of_week">
+                <option>Monday</option>
+                <option>Tuesday</option>
+                <option>Wednesday</option>
+                <option>Thursday</option>
+                <option>Friday</option>
+                <option>Saturday</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="start_time">Start Time</label>
+              <input type="time" id="start_time" required>
+            </div>
+            <div class="form-group">
+              <label for="end_time">End Time</label>
+              <input type="time" id="end_time" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="mode">Mode</label>
+              <select id="mode">
+                <option value="in-person">In-Person</option>
+                <option value="online">Online</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="topic">Topic (Optional)</label>
+              <input type="text" id="topic" placeholder="Enter topic">
+            </div>
+          </div>
+          <div>
+            <button type="submit">Add Timetable Entry</button>
+            <button type="button" id="timetable-cancel" style="display:none;" onclick="cancelTimetableEdit()">Cancel Edit</button>
+          </div>
+        </form>
+        <table id="timetableTable">
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Class</th>
+              <th>Subject</th>
+              <th>Teacher</th>
+              <th>Mode</th>
+              <th>Topic</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!token || user.role !== "Admin") location.href = "/admin";
+    document.getElementById("username").textContent = user.username;
+
+    function getHeaders() {
+      return { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+    }
+
+    let currentTab = 'students';
+    function switchTab(name) {
+      currentTab = name;
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.getElementById(name + "-tab").classList.add("active");
+      
+      document.querySelectorAll(".nav-tabs button").forEach(btn => btn.classList.remove("active"));
+      event.target.classList.add("active");
+
+      if (["students", "classsubject", "teacherclasses", "timetable"].includes(name)) {
+        populateDropdowns();
+      }
+
+      if (name === "timetable") {
+        populateTeacherSubjectDropdown();
+      }
+    }
+
+    function logout() { localStorage.clear(); location.href = "/"; }
+
+    async function fetchData(url, method = "GET", body = null) {
+      const res = await fetch(url, { method, headers: getHeaders(), body: body ? JSON.stringify(body) : null });
+      return res.json();
+    }
+
+    function cancelEdit(type) {
+      const form = document.getElementById(type + "-form");
+      form.reset();
+
+      if (type === "student") {
+        form.onsubmit = registerStudent;
+      } else if (window["register" + capitalize(type)]) {
+        form.onsubmit = window["register" + capitalize(type)];
+      } else if (window["create" + capitalize(type)]) {
+        form.onsubmit = window["create" + capitalize(type)];
+      }
+
+      document.getElementById(type + "-cancel").style.display = "none";
+    }
+
+    function capitalize(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    async function registerStudent(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      const res = await fetchData("/api/admin/students", "POST", data);
+      alert(res.message || res.error);
+      e.target.reset();
+      loadStudents();
+    }
+    document.getElementById("student-form").onsubmit = registerStudent;
+
+    async function registerTeacher(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      const res = await fetchData("/api/admin/teachers", "POST", data);
+      alert(res.message || res.error);
+      e.target.reset();
+      loadTeachers();
+    }
+
+    async function createClass(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      const res = await fetchData("/api/admin/classes", "POST", data);
+      //alert(res.message || res.error);
+      e.target.reset();
+      loadClasses();
+    }
+
+    async function createSubject(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      const res = await fetchData("/api/admin/subjects", "POST", data);
+      //alert(res.message || res.error);
+      e.target.reset();
+      loadSubjects();
+    }
+
+    async function editStudent(id) {
+      const student = await fetchData(`/api/admin/students/${id}`);
+      const form = document.getElementById("student-form");
+
+      form.name.value = student.name;
+      form.roll_no.value = student.roll_no;
+      form.batch.value = student.batch;
+      form.dept.value = student.dept;
+      form.email.value = student.email;
+      form.class_id.value = student.class_id || "";
+
+      document.getElementById("student-cancel").style.display = "inline";
+
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const data = Object.fromEntries(new FormData(form));
+        const res = await fetchData(`/api/admin/students/${id}`, "PUT", data);
+        alert(res.message || res.error);
+        cancelEdit("student");
+        loadStudents();
+      };
+    }
+
+    async function editTeacher(id) {
+      const t = await fetchData(`/api/admin/teachers/${id}`);
+      const form = document.getElementById("teacher-form");
+      form.name.value = t.name;
+      form.department.value = t.department;
+      form.email.value = t.email;
+      form.username.value = t.username;
+      form.password.value = "";
+      document.getElementById("teacher-cancel").style.display = "inline";
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const data = Object.fromEntries(new FormData(form));
+        const res = await fetchData(`/api/admin/teachers/${id}`, "PUT", data);
+        alert(res.message || res.error);
+        cancelEdit("teacher");
+        loadTeachers();
+      };
+    }
+
+    async function editClass(id) {
+      const c = await fetchData(`/api/admin/classes/${id}`);
+      const form = document.getElementById("class-form");
+      form.name.value = c.name;
+      form.term.value = c.term;
+      form.section.value = c.section;
+      document.getElementById("class-cancel").style.display = "inline";
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const data = Object.fromEntries(new FormData(form));
+        const res = await fetchData(`/api/admin/classes/${id}`, "PUT", data);
+        //alert(res.message || res.error);
+        cancelEdit("class");
+        loadClasses();
+      };
+    }
+
+    async function editSubject(id) {
+      const s = await fetchData(`/api/admin/subjects/${id}`);
+      const form = document.getElementById("subject-form");
+      form.code.value = s.code;
+      form.title.value = s.title;
+      document.getElementById("subject-cancel").style.display = "inline";
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const data = Object.fromEntries(new FormData(form));
+        const res = await fetchData(`/api/admin/subjects/${id}`, "PUT", data);
+        
+        
+        
+        
+        alert(res.message || res.error);
+        cancelEdit("subject");
+        loadSubjects();
+      };
+    }
+
+    const del = async (url, reloadFn) => {
+      if (!confirm("Delete this record?")) return;
+      const res = await fetchData(url, "DELETE");
+      alert(res.message || res.error);
+      reloadFn();
+    };
+    const deleteStudent = id => del(`/api/admin/students/${id}`, loadStudents);
+    const deleteTeacher = id => del(`/api/admin/teachers/${id}`, loadTeachers);
+    const deleteClass = id => del(`/api/admin/classes/${id}`, loadClasses);
+    const deleteSubject = id => del(`/api/admin/subjects/${id}`, loadSubjects);
+
+    async function loadStudents() {
+      const data = await fetchData("/api/admin/students");
+      document.getElementById("students-list").innerHTML =
+        `<table><tr><th>Name</th><th>Roll</th><th>Batch</th><th>Class</th><th>Actions</th></tr>` +
+        data.map(s => `
+          <tr>
+            <td>${s.name}</td><td>${s.roll_no}</td><td>${s.batch}</td><td>${s.class_name || '-'}</td>
+            <td>
+              <button class="edit-btn" onclick="editStudent(${s.student_id})">✏️ Edit</button>
+              <button class="delete-btn" onclick="deleteStudent(${s.student_id})">🗑️ Delete</button>
+            </td>
+          </tr>`).join("") + `</table>`;
+      document.getElementById("stat-students").textContent = data.length;
+    }
+
+    async function loadTeachers() {
+      const data = await fetchData("/api/admin/teachers");
+      document.getElementById("teachers-list").innerHTML =
+        `<table><tr><th>Name</th><th>Department</th><th>Actions</th></tr>` +
+        data.map(t => `
+          <tr>
+            <td>${t.name}</td><td>${t.department}</td>
+            <td>
+              <button class="edit-btn" onclick="editTeacher(${t.teacher_id})">✏️ Edit</button>
+              <button class="delete-btn" onclick="deleteTeacher(${t.teacher_id})">🗑️ Delete</button>
+            </td>
+          </tr>`).join("") + `</table>`;
+      document.getElementById("stat-teachers").textContent = data.length;
+    }
+
+    async function loadClasses() {
+      const data = await fetchData("/api/admin/classes");
+      document.getElementById("classes-list").innerHTML =
+        `<table><tr><th>Name</th><th>Term</th><th>Section</th><th>Actions</th></tr>` +
+        data.map(c => `
+          <tr>
+            <td>${c.name}</td><td>${c.term}</td><td>${c.section}</td>
+            <td>
+              <button class="edit-btn" onclick="editClass(${c.class_id})">✏️ Edit</button>
+              <button class="delete-btn" onclick="deleteClass(${c.class_id})">🗑️ Delete</button>
+            </td>
+          </tr>`).join("") + `</table>`;
+      document.getElementById("stat-classes").textContent = data.length;
+    }
+
+    async function loadSubjects() {
+      const data = await fetchData("/api/admin/subjects");
+      document.getElementById("subjects-list").innerHTML =
+        `<table><tr><th>Code</th><th>Title</th><th>Actions</th></tr>` +
+        data.map(s => `
+          <tr>
+            <td>${s.code}</td><td>${s.title}</td>
+            <td>
+              <button class="edit-btn" onclick="editSubject(${s.subject_id})">✏️ Edit</button>
+              <button class="delete-btn" onclick="deleteSubject(${s.subject_id})">🗑️ Delete</button>
+            </td>
+          </tr>`).join("") + `</table>`;
+      document.getElementById("stat-subjects").textContent = data.length;
+    }
+
+    async function addClassSubject(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      const res = await fetchData("/api/admin/classsubject", "POST", data);
+      alert(res.message || res.error);
+      e.target.reset();
+      loadClassSubjects();
+    }
+
+    async function loadClassSubjects() {
+      const data = await fetchData("/api/admin/classsubject");
+      document.getElementById("classsubject-list").innerHTML =
+        `<table><tr><th>Class</th><th>Subject</th><th>Actions</th></tr>` +
+        data.map(cs => `
+          <tr>
+            <td>${cs.class_name}</td><td>${cs.subject_title}</td>
+            <td><button class="delete-btn" onclick="deleteClassSubject(${cs.cs_id})">🗑️ Delete</button></td>
+          </tr>`).join("") + `</table>`;
+    }
+
+    const deleteClassSubject = id => del(`/api/admin/classsubject/${id}`, loadClassSubjects);
+
+    async function addTeacherSubject(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      const res = await fetchData("/api/admin/teachersubject", "POST", data);
+      alert(res.message || res.error);
+      e.target.reset();
+      loadTeacherSubjects();
+    }
+
+    async function loadTeacherSubjects() {
+      const data = await fetchData("/api/admin/teachersubject");
+      document.getElementById("teacherclasses-list").innerHTML =
+        `<table><tr><th>Teacher</th><th>Class</th><th>Subject</th><th>Actions</th></tr>` +
+        data.map(t => `
+          <tr>
+            <td>${t.teacher_name}</td><td>${t.class_name}</td><td>${t.subject_title}</td>
+            <td><button class="delete-btn" onclick="deleteTeacherSubject(${t.ts_id})">🗑️ Delete</button></td>
+          </tr>`).join("") + `</table>`;
+    }
+
+    const deleteTeacherSubject = id => del(`/api/admin/teachersubject/${id}`, loadTeacherSubjects);
+
+    async function populateDropdowns() {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+
+      try {
+        const classesRes = await fetch('/api/admin/classes', { headers });
+        const classes = await classesRes.json();
+
+        const classDropdown = document.getElementById("class-dropdown");
+        if (classDropdown) {
+          classDropdown.innerHTML = '<option value="">Select Class</option>' +
+            classes.map(c => `<option value="${c.class_id}">${c.name} (${c.term}-${c.section})</option>`).join("");
+        }
+
+        const studentClassDropdown = document.getElementById("student-class-dropdown");
+        if (studentClassDropdown) {
+          studentClassDropdown.innerHTML = '<option value="">Select Class</option>' +
+            classes.map(c => `<option value="${c.class_id}">${c.name} (${c.term}-${c.section})</option>`).join("");
+        }
+
+        const subjectsRes = await fetch('/api/admin/subjects', { headers });
+        const subjects = await subjectsRes.json();
+        const subjectDropdown = document.getElementById("subject-dropdown");
+        if (subjectDropdown) {
+          subjectDropdown.innerHTML = '<option value="">Select Subject</option>' +
+            subjects.map(s => `<option value="${s.subject_id}">${s.code} - ${s.title}</option>`).join("");
+        }
+
+        const teachersRes = await fetch('/api/admin/teachers', { headers });
+        const teachers = await teachersRes.json();
+        const teacherDropdown = document.getElementById("teacher-dropdown");
+        if (teacherDropdown) {
+          teacherDropdown.innerHTML = '<option value="">Select Teacher</option>' +
+            teachers.map(t => `<option value="${t.teacher_id}">${t.name} (${t.department})</option>`).join("");
+        }
+
+        const csRes = await fetch('/api/admin/classsubject', { headers });
+        const csList = await csRes.json();
+
+        const csDropdown = document.getElementById("cs-dropdown");
+        if (csDropdown) {
+          csDropdown.innerHTML = '<option value="">Select Class–Subject</option>' +
+            csList.map(cs => `<option value="${cs.cs_id}">${cs.class_name} (${cs.term}-${cs.section}) → ${cs.subject_title}</option>`).join("");
+        }
+
+      } catch (err) {
+        console.error("Error populating dropdowns:", err);
+      }
+    }
+
+    async function loadAll() {
+      await loadStudents();
+      await loadTeachers();
+      await loadClasses();
+      await loadSubjects();
+      await loadClassSubjects();
+      await loadTeacherSubjects();
+    }
+
+    async function populateTeacherSubjectDropdown() {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/admin/teachersubject', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      const tsSelect = document.getElementById('ts_id');
+      tsSelect.innerHTML = '<option value="">Select Teacher–Subject</option>';
+      data.forEach(ts => {
+        const opt = document.createElement('option');
+        opt.value = ts.ts_id;
+        opt.textContent = `${ts.teacher_name} → ${ts.class_name} (${ts.subject_title})`;
+        tsSelect.appendChild(opt);
+      });
+    }
+
+    const timetableForm = document.getElementById('timetableForm');
+
+    async function timetableSubmitHandler(e) {
+      e.preventDefault();
+      const token = localStorage.getItem('token');
+      const payload = {
+        ts_id: document.getElementById('ts_id').value,
+        day_of_week: document.getElementById('day_of_week').value,
+        start_time: document.getElementById('start_time').value,
+        end_time: document.getElementById('end_time').value,
+        mode: document.getElementById('mode').value,
+        topic: document.getElementById('topic').value
+      };
+
+      const res = await fetch('/api/admin/timetable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert('Timetable entry added!');
+        loadTimetable();
+        e.target.reset();
+      } else alert(data.error);
+    }
+
+    timetableForm.onsubmit = timetableSubmitHandler;
+
+    async function loadTimetable() {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/admin/timetable', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      const tbody = document.querySelector('#timetableTable tbody');
+      tbody.innerHTML = '';
+      data.forEach(tt => {
+        const row = `
+          <tr>
+            <td>${tt.day_of_week}</td>
+            <td>${tt.start_time}</td>
+            <td>${tt.end_time}</td>
+            <td>${tt.class_name}</td>
+            <td>${tt.subject_title}</td>
+            <td>${tt.teacher_name}</td>
+            <td>${tt.mode}</td>
+            <td>${tt.topic || '-'}</td>
+            <td>
+              <button class="edit-btn" onclick="editTimetable(${tt.timetable_id})">✏️ Edit</button>
+              <button class="delete-btn" onclick="deleteTimetable(${tt.timetable_id})">🗑️ Delete</button>
+            </td>
+          </tr>`;
+        tbody.insertAdjacentHTML('beforeend', row);
+      });
+    }
+
+    async function deleteTimetable(id) {
+      if (!confirm('Delete this timetable entry?')) return;
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/admin/timetable/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        alert('Deleted!');
+        loadTimetable();
+      } else alert('Failed to delete');
+    }
+
+    async function editTimetable(id) {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/admin/timetable/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const tt = await res.json();
+
+      document.getElementById('ts_id').value = tt.ts_id;
+      document.getElementById('day_of_week').value = tt.day_of_week;
+      document.getElementById('start_time').value = tt.start_time;
+      document.getElementById('end_time').value = tt.end_time;
+      document.getElementById('mode').value = tt.mode;
+      document.getElementById('topic').value = tt.topic || '';
+      document.getElementById('timetable-cancel').style.display = 'inline';
+
+      const form = document.getElementById('timetableForm');
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const payload = {
+          ts_id: document.getElementById('ts_id').value,
+          day_of_week: document.getElementById('day_of_week').value,
+          start_time: document.getElementById('start_time').value,
+          end_time: document.getElementById('end_time').value,
+          mode: document.getElementById('mode').value,
+          topic: document.getElementById('topic').value
+        };
+
+        const updateRes = await fetch(`/api/admin/timetable/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(payload)
+        });
+        const data = await updateRes.json();
+
+        if (updateRes.ok) {
+          alert('Timetable entry updated!');
+          form.reset();
+          loadTimetable();
+          form.onsubmit = timetableSubmitHandler;
+          document.getElementById('timetable-cancel').style.display = 'none';
+        } else {
+          alert(data.error || 'Failed to update');
+        }
+      };
+    }
+
+    function cancelTimetableEdit() {
+      const form = document.getElementById('timetableForm');
+      form.reset();
+      form.onsubmit = timetableSubmitHandler;
+      document.getElementById('timetable-cancel').style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      populateTeacherSubjectDropdown();
+      loadTimetable();
+    });
+
+    loadAll();
+    populateDropdowns();
+  </script>
+</body>
+</html>

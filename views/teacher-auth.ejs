@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Teacher Login - SAMS</title>
+  <style>
+    body { 
+      font-family: Arial; 
+      background: #f3f6fa; 
+      display:flex; 
+      justify-content:center; 
+      align-items:center; 
+      height:100vh; 
+    }
+    .login-box { 
+      background:white; 
+      padding:30px; 
+      border-radius:10px; 
+      box-shadow:0 2px 6px rgba(0,0,0,0.1); 
+      width:320px; 
+    }
+    h2 { text-align:center; }
+    input, button { 
+      width:100%; 
+      padding:10px; 
+      margin:8px 0; 
+      border-radius:6px; 
+      border:1px solid #ccc; 
+    }
+    button { background:#4f46e5; color:white; border:none; cursor:pointer; }
+    button:hover { background:#3730a3; }
+    .link { color:#4f46e5; text-align:center; display:block; cursor:pointer; margin-top:10px; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>Teacher Login</h2>
+
+    <!-- 🔐 Login Form -->
+    <form id="teacherLoginForm">
+      <input type="text" name="username" placeholder="Username" required />
+      <input type="password" name="password" placeholder="Password" required />
+      <button type="submit">Login</button>
+      <span class="link" id="forgotLink">Forgot Password?</span>
+    </form>
+
+    <!-- 📨 Forgot Password (OTP) Section -->
+    <div id="forgotSection" class="hidden">
+      <h3 style="text-align:center;">Reset Password</h3>
+      
+      <!-- Step 1: Request OTP -->
+      <form id="otpRequestForm">
+        <input type="email" name="email" placeholder="Enter registered email" required />
+        <button type="submit">Send OTP</button>
+      </form>
+
+      <!-- Step 2: Verify OTP -->
+      <form id="otpVerifyForm" class="hidden">
+        <input type="text" name="otp" placeholder="Enter OTP" required />
+        <input type="password" name="new_password" placeholder="Enter new password" required />
+        <button type="submit">Reset Password</button>
+      </form>
+
+      <span class="link" id="backToLogin">← Back to Login</span>
+    </div>
+  </div>
+
+  <script>
+  // =====================
+  // LOGIN FORM HANDLER
+  // =====================
+  const form = document.getElementById('teacherLoginForm');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(form));
+    data.role = 'Teacher';
+
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+
+    if (res.ok) {
+      localStorage.setItem('token', result.token);
+      localStorage.setItem('user', JSON.stringify(result.user));
+      alert('Login successful!');
+      window.location.href = '/teacher/portal';
+    } else {
+      alert(result.error || 'Login failed');
+    }
+  });
+
+  // =====================
+  // FORGOT PASSWORD (OTP) HANDLERS
+  // =====================
+  const forgotLink = document.getElementById('forgotLink');
+  const forgotSection = document.getElementById('forgotSection');
+  const backToLogin = document.getElementById('backToLogin');
+  const otpRequestForm = document.getElementById('otpRequestForm');
+  const otpVerifyForm = document.getElementById('otpVerifyForm');
+
+  forgotLink.addEventListener('click', () => {
+    form.classList.add('hidden');
+    forgotSection.classList.remove('hidden');
+  });
+
+  backToLogin.addEventListener('click', () => {
+    forgotSection.classList.add('hidden');
+    form.classList.remove('hidden');
+    otpRequestForm.reset();
+    otpVerifyForm.reset();
+    otpRequestForm.classList.remove('hidden');
+    otpVerifyForm.classList.add('hidden');
+  });
+
+  // Step 1: Request OTP
+  otpRequestForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(otpRequestForm));
+    const email = data.email;
+
+    const res = await fetch('/api/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, role: 'Teacher' })
+    });
+
+    const result = await res.json();
+    alert(result.message || result.error);
+
+    if (res.ok) {
+      otpRequestForm.classList.add('hidden');
+      otpVerifyForm.classList.remove('hidden');
+    }
+  });
+
+  // Step 2: Verify OTP
+  otpVerifyForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = otpRequestForm.querySelector('[name="email"]').value;
+    const otp = otpVerifyForm.querySelector('[name="otp"]').value;
+    const newPassword = otpVerifyForm.querySelector('[name="new_password"]').value;
+
+    const res = await fetch('/api/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp, newPassword })
+    });
+
+    const result = await res.json();
+    alert(result.message || result.error);
+
+    if (res.ok) {
+      window.location.href = '/teacher';
+    }
+  });
+</script>
+
+</body>
+</html>

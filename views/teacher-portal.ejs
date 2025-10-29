@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teacher Portal - SAMS</title>
+  <link rel="stylesheet" href="/css/teacher-portal.css">
+  
+</head>
+<body>
+  <header>
+    <div class="title">
+      SAMS   Teacher Portal    
+    </div>
+    <button class="logout-btn" onclick="logout()">
+      🚪 Logout
+    </button>
+  </header>
+
+  <main>
+    <div class="welcome-card">
+      <h2>Welcome, <span id="teacherName"></span>! 👋</h2>
+      <p style="color: #718096; margin-top: 8px;">Manage your classes and track student attendance efficiently</p>
+    </div>
+
+    <!-- Class Selection Section -->
+    <section id="classSection">
+      <h3>🏫 Select Your Current Class</h3>
+      <div class="control-group">
+        <button class="refresh-btn" onclick="loadValidClasses()">🔄 Check Active Classes</button>
+        <select id="classDropdown">
+          <option value="">-- No active class yet --</option>
+        </select>
+        <button id="startBtn" onclick="startSession()" disabled>▶️ Start Attendance Session</button>
+      </div>
+    </section>
+
+    <!-- Attendance Marking Section -->
+    <section id="attendanceSection" class="hidden">
+      <h3>✅ Mark Attendance</h3>
+      <table id="studentTable">
+        <thead>
+          <tr>
+            <th>Roll No</th>
+            <th>Student Name</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <button class="submit-btn" onclick="submitAttendance()" style="margin-top: 20px;">
+        ✅ Submit Attendance
+      </button>
+    </section>
+
+    <hr>
+
+    <!-- Modify Attendance Section -->
+    <section id="modifySection">
+      <h3>📝 Modify Past Attendance</h3>
+      <div class="control-group">
+        <button class="refresh-btn" onclick="loadPastSessions()">🔄 Load Past Sessions</button>
+        <select id="sessionDropdown">
+          <option value="">-- Select a session --</option>
+        </select>
+        <button onclick="loadSessionAttendance()">👁️ View Attendance</button>
+      </div>
+
+      <table id="modifyTable" class="hidden">
+        <thead>
+          <tr>
+            <th>Roll No</th>
+            <th>Student Name</th>
+            <th>Current Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <hr>
+
+    <!-- Statistics Section -->
+    <section id="statsSection">
+      <h3>📊 Attendance Statistics & Analytics</h3>
+      
+      <div class="filter-section">
+        <label for="classSubjectDropdown">Select Class & Subject:</label>
+        <div class="control-group">
+          <select id="classSubjectDropdown">
+            <option value="">-- Choose a class --</option>
+          </select>
+          <button onclick="loadFilteredStats()">📈 View Statistics</button>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="attendanceChart"></canvas>
+      </div>
+
+      <div class="chart-container" style="margin-top: 30px;">
+        <canvas id="studentAttendanceChart"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    function logout() {
+      if (confirm("Are you sure you want to log out?")) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        alert('Logged out successfully!');
+        window.location.href = '/teacher';
+      }
+    }
+
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    if (!token || user.role !== 'Teacher') {
+      alert('Unauthorized access');
+      window.location.href = '/teacher';
+    }
+
+    document.getElementById('teacherName').textContent = user.username;
+
+    let currentSessionId = null;
+    let studentsList = [];
+    let attendanceChart = null;
+    let studentAttendanceChart = null;
+
+    async function loadValidClasses() {
+      const res = await fetch('/api/teacher/valid-classes', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+
+      const dropdown = document.getElementById('classDropdown');
+      dropdown.innerHTML = '';
+
+      if (!res.ok || data.error) {
+        dropdown.innerHTML = `<option value="">${data.error || 'No active class'}</option>`;
+        document.getElementById('startBtn').disabled = true;
+        return;
+      }
+
+      data.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.ts_id;
+        opt.textContent = `${c.class_name} - ${c.subject_title} (${c.start_time.slice(0,5)}-${c.end_time.slice(0,5)})`;
+        dropdown.appendChild(opt);
+      });
+
+      document.getElementById('startBtn').disabled = false;
+    }
+
+    async function startSession() {
+      const ts_id = document.getElementById('classDropdown').value;
+      if (!ts_id) return alert('Select a valid class');
+
+      const res = await fetch('/api/teacher/start-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ts_id })
+      });
+
+      const data = await res.json();
+      if (!res.ok) return alert(data.error || 'Failed to start session');
+
+      alert(data.message);
+      currentSessionId = data.session_id;
+      loadStudentsForSession(currentSessionId);
+    }
+
+    async function loadStudentsForSession(sessionId) {
+      const res = await fetch(`/api/teacher/session/${sessionId}/students`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) return alert('Failed to load students');
+
+      studentsList = data;
+      const tbody = document.querySelector('#studentTable tbody');
+      tbody.innerHTML = '';
+
+      data.forEach(st => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${st.roll_no}</td>
+          <td>${st.name}</td>
+          <td>
+            <button onclick="toggleStatus(${st.student_id})" id="status-${st.student_id}" class="${st.status ? 'present' : 'absent'}">
+              ${st.status ? 'Present' : 'Absent'}
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      document.getElementById('attendanceSection').classList.remove('hidden');
+    }
+
+    function toggleStatus(studentId) {
+      const btn = document.getElementById(`status-${studentId}`);
+      const st = studentsList.find(s => s.student_id === studentId);
+      st.status = !st.status;
+      btn.textContent = st.status ? 'Present' : 'Absent';
+      btn.className = st.status ? 'present' : 'absent';
+    }
+
+    async function submitAttendance() {
+      const records = studentsList.map(s => ({
+        student_id: s.student_id,
+        status: !!s.status
+      }));
+
+      const res = await fetch(`/api/teacher/session/${currentSessionId}/attendance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ records })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert('Attendance submitted successfully!');
+      } else {
+        alert(data.error || 'Failed to submit attendance');
+      }
+    }
+
+    async function loadPastSessions() {
+      const res = await fetch('/api/teacher/sessions', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+
+      const dropdown = document.getElementById('sessionDropdown');
+      dropdown.innerHTML = '';
+
+      if (!res.ok || !data.length) {
+        dropdown.innerHTML = `<option value="">No past sessions found</option>`;
+        return;
+      }
+
+      data.forEach(s => {
+        const opt = document.createElement('option');
+        const date = new Date(s.date).toLocaleDateString();
+        opt.value = s.session_id;
+        opt.textContent = `${s.class_name} - ${s.subject_title} (${date})`;
+        dropdown.appendChild(opt);
+      });
+    }
+
+    async function loadSessionAttendance() {
+      const sessionId = document.getElementById('sessionDropdown').value;
+      if (!sessionId) return alert('Please select a session');
+
+      const res = await fetch(`/api/teacher/sessions/${sessionId}/attendance`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+
+      const table = document.getElementById('modifyTable');
+      const tbody = table.querySelector('tbody');
+      tbody.innerHTML = '';
+
+      if (!res.ok || !data.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No attendance found</td></tr>';
+        table.classList.remove('hidden');
+        return;
+      }
+
+      data.forEach(rec => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${rec.roll_no}</td>
+          <td>${rec.name}</td>
+          <td><span class="${rec.status ? 'present' : 'absent'}" style="padding: 6px 16px; border-radius: 16px; font-weight: 600;">${rec.status ? 'Present' : 'Absent'}</span></td>
+          <td>
+            <button onclick="toggleAttendance(${rec.attendance_id}, ${!rec.status})">
+              Mark ${rec.status ? 'Absent' : 'Present'}
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      table.classList.remove('hidden');
+    }
+
+    async function toggleAttendance(attendanceId, newStatus) {
+      const res = await fetch(`/api/teacher/attendance/${attendanceId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert('Updated successfully!');
+        loadSessionAttendance();
+      } else {
+        alert(data.error || 'Failed to update attendance');
+      }
+    }
+
+    async function loadAssignedClassSubjects() {
+      const res = await fetch('/api/teacher/assigned', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+
+      const dropdown = document.getElementById('classSubjectDropdown');
+      dropdown.innerHTML = '<option value="">-- Choose --</option>';
+
+      if (!res.ok || !data.length) {
+        dropdown.innerHTML = '<option value="">No assigned classes</option>';
+        return;
+      }
+
+      data.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.ts_id;
+        opt.textContent = `${d.class_name} - ${d.subject_title}`;
+        dropdown.appendChild(opt);
+      });
+    }
+    loadAssignedClassSubjects();
+
+    async function loadFilteredStats() {
+      const ts_id = document.getElementById('classSubjectDropdown').value;
+      if (!ts_id) return alert('Please select a class & subject');
+
+      const res = await fetch(`/api/teacher/attendance/stats/${ts_id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.length) {
+        alert('No attendance records found for this selection.');
+        return;
+      }
+
+      const labels = data.map(d => new Date(d.date).toLocaleDateString());
+      const percentages = data.map(d => d.attendance_percentage);
+
+      const ctx = document.getElementById('attendanceChart').getContext('2d');
+      if (attendanceChart) attendanceChart.destroy();
+
+      attendanceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Attendance % Over Time',
+            data: percentages,
+            borderColor: 'rgb(102, 126, 234)',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true,
+            pointRadius: 5,
+            pointHoverRadius: 7
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            title: { 
+              display: true, 
+              text: 'Attendance Trend Over Time', 
+              font: { size: 18, weight: 'bold' },
+              padding: 20
+            },
+            tooltip: { 
+              callbacks: { 
+                label: (ctx) => `Attendance: ${ctx.parsed.y.toFixed(1)}%` 
+              }
+            },
+            legend: {
+              display: true,
+              position: 'top'
+            }
+          },
+          scales: {
+            y: { 
+              beginAtZero: true, 
+              max: 100, 
+              title: { display: true, text: 'Attendance Percentage', font: { size: 14 } },
+              grid: { color: 'rgba(0, 0, 0, 0.05)' }
+            },
+            x: { 
+              title: { display: true, text: 'Session Date', font: { size: 14 } },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+
+      await loadStudentStats(ts_id);
+    }
+
+    async function loadStudentStats(ts_id) {
+      const res = await fetch(`/api/teacher/attendance/student-stats/${ts_id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.length) {
+        console.warn('No student data found.');
+        return;
+      }
+
+      const labels = data.map(d => `${d.roll_no} - ${d.name}`);
+      const percentages = data.map(d => d.attendance_percentage);
+
+      const ctx = document.getElementById('studentAttendanceChart').getContext('2d');
+      if (studentAttendanceChart) studentAttendanceChart.destroy();
+
+      studentAttendanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Attendance %',
+            data: percentages,
+            backgroundColor: percentages.map(p => 
+              p < 75 ? 'rgba(252, 129, 129, 0.8)' : 'rgba(72, 187, 120, 0.8)'
+            ),
+            borderColor: percentages.map(p => 
+              p < 75 ? 'rgb(252, 129, 129)' : 'rgb(72, 187, 120)'
+            ),
+            borderWidth: 2
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            title: { 
+              display: true, 
+              text: 'Student-wise Attendance Performance', 
+              font: { size: 18, weight: 'bold' },
+              padding: 20
+            },
+            tooltip: { 
+              callbacks: { 
+                label: (ctx) => `Attendance: ${ctx.parsed.x.toFixed(1)}%` 
+              }
+            },
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            x: { 
+              beginAtZero: true, 
+              max: 100, 
+              title: { display: true, text: 'Attendance Percentage', font: { size: 14 } },
+              grid: { color: 'rgba(0, 0, 0, 0.05)' }
+            },
+            y: { 
+              title: { display: true, text: 'Students', font: { size: 14 } },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
