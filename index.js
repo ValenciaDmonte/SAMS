@@ -1728,13 +1728,6 @@ cron.schedule('0 8 1 * *', async () => {
 
 
 
-
-// Error Handlers
-app.use((req, res) => res.status(404).send('Page not found'));
-app.use((err, req, res, next) => { console.error(err.stack); res.status(500).send('Something went wrong!'); });
-
-
-
 app.get("/test-email", async (req, res) => {
   try {
     await sendEmail({
@@ -1749,6 +1742,13 @@ app.get("/test-email", async (req, res) => {
     res.status(500).send("Failed: " + err.message);
   }
 });
+
+
+// Error Handlers
+app.use((req, res) => res.status(404).send('Page not found'));
+app.use((err, req, res, next) => { console.error(err.stack); res.status(500).send('Something went wrong!'); });
+
+
 
 
 
