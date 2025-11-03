@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3000;
 // Configure Nodemailer for Gmail + Render
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.gmail.com",
-  port: Number(process.env.SMTP_PORT) || 465,
+  port: Number(process.env.SMTP_PORT) || 587,
   secure: process.env.SMTP_SECURE === "true", // true for SSL (465)
   auth: {
     user: process.env.EMAIL_USER,
