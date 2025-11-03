@@ -12,16 +12,26 @@ const PORT = process.env.PORT || 3000;
 
 // Configure Nodemailer
 
+// Configure Nodemailer for Gmail + Render
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: Number(process.env.SMTP_PORT) || 465,
+  secure: process.env.SMTP_SECURE === "true", // true for SSL (465)
   auth: {
-    user: process.env.EMAIL_USER || 'your-email@gmail.com',
-    pass: process.env.EMAIL_PASS || 'your-app-password'
-  },
-  tls: {
-    rejectUnauthorized: false   //  This line allows self-signed certificates
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });
+
+// Optional: Verify connection (to catch errors early)
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("Email server connection failed:", error);
+  } else {
+    console.log("Email transporter ready to send messages");
+  }
+});
+
 
 
 
@@ -1681,7 +1691,7 @@ app.post('/api/student/chatbot', authenticateToken, authorizeRole('Student'), as
 
     res.json({ reply });
   } catch (error) {
-    console.error("❌ Chatbot Error:", error);
+    console.error("Chatbot Error:", error);
     res.status(500).json({ error: "Failed to process request" });
   }
 });
@@ -1691,7 +1701,7 @@ const cron = require('node-cron');
 
 // Monthly check: run at 08:00 on day 1 of every month
 cron.schedule('0 8 1 * *', async () => {
-  console.log('🔔 Running monthly attendance alerts job');
+  console.log(' Running monthly attendance alerts job');
 
   try {
     // Fetch all students with their per-subject stats
@@ -1730,9 +1740,9 @@ cron.schedule('0 8 1 * *', async () => {
       // await new Promise(r => setTimeout(r, 200));
     }
 
-    console.log('🔔 Monthly attendance alerts job completed');
+    console.log('Monthly attendance alerts job completed');
   } catch (err) {
-    console.error('❌ Monthly attendance job error:', err);
+    console.error('Monthly attendance job error:', err);
   }
 });
 
@@ -1743,6 +1753,24 @@ cron.schedule('0 8 1 * *', async () => {
 // Error Handlers
 app.use((req, res) => res.status(404).send('Page not found'));
 app.use((err, req, res, next) => { console.error(err.stack); res.status(500).send('Something went wrong!'); });
+
+
+// ---- TEMPORARY EMAIL TEST ROUTE ----
+app.get("/test-email", async (req, res) => {
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER, // sends to yourself for testing
+      subject: "Render Email Test - SAMS",
+      text: "Your Render app can now send emails successfully!"
+    });
+    console.log("Test email sent successfully!");
+    res.send("Email sent successfully!");
+  } catch (err) {
+    console.error(" Email test failed:", err);
+    res.status(500).send("Failed: " + err.message);
+  }
+});
 
 
 // Start Server
