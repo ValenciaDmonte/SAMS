@@ -5,48 +5,38 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 require('dotenv').config();
-const nodemailer = require('nodemailer');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configure Nodemailer
+// Replace Nodemailer with Resend
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Configure Nodemailer for Gmail + Render
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "smtp.gmail.com",
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: process.env.SMTP_SECURE === "true", // true for SSL (465)
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+// Helper function to send emails through Resend
+async function sendEmail({ to, subject, text }) {
+  const from = process.env.EMAIL_FROM || 'SAMS <onboarding@resend.dev>';
+  const replyTo = process.env.REPLY_TO || undefined;
 
-// Optional: Verify connection (to catch errors early)
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("Email server connection failed:", error);
-  } else {
-    console.log("Email transporter ready to send messages");
-  }
-});
+  const response = await resend.emails.send({
+    from,
+    to,
+    subject,
+    text,
+    reply_to: replyTo
+  });
+
+  console.log('📧 Email queued via Resend:', response?.data?.id || response);
+}
 
 
 
 
-// Optional: Verify connection (to catch errors early)
-transporter.verify((error, success) => {
-  if (error) {
-    console.error(' Email server connection failed:', error);
-  } else {
-    console.log(' Email transporter ready to send messages');
-  }
-});
 
 
 // ===== Notification helpers =====
-async function sendAttendanceStatusEmail(toEmail, studentName, subjectTitle, sessionDate, status, currentPercentage, oneMissRisk=false) {
+async function sendAttendanceStatusEmail(toEmail, studentName, subjectTitle, sessionDate, status, currentPercentage, oneMissRisk = false) {
   try {
     const subject = `Attendance Update: ${subjectTitle} — ${status}`;
     let text = `Hi ${studentName},\n\n` +
@@ -54,25 +44,20 @@ async function sendAttendanceStatusEmail(toEmail, studentName, subjectTitle, ses
                `Current attendance in ${subjectTitle}: ${currentPercentage}%.\n`;
 
     if (oneMissRisk) {
-      text += `\n Notice: Missing one more lecture will drop you below 75% in this subject. Please try to attend upcoming classes.\n`;
+      text += `\nNotice: Missing one more lecture will drop you below 75% in this subject. Please attend upcoming classes.\n`;
     }
 
     text += `\n— SAMS Notification`;
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: toEmail,
-      subject,
-      text
-    });
-
-    console.log(` Sent attendance-status email to ${toEmail} (${studentName}) - ${subjectTitle} - ${status}`);
+    await sendEmail({ to: toEmail, subject, text });
+    console.log(`✅ Sent attendance-status email to ${toEmail}`);
   } catch (err) {
-    console.error(` Failed to send status email to ${toEmail}:`, err.message || err);
+    console.error(`❌ Failed to send status email to ${toEmail}:`, err.message || err);
   }
 }
 
-async function sendMonthlyAlertEmail(toEmail, studentName, subjectTitle, percentage, note='') {
+
+async function sendMonthlyAlertEmail(toEmail, studentName, subjectTitle, percentage, note = '') {
   try {
     const subject = `Monthly Attendance Alert: ${subjectTitle} — ${percentage}%`;
     let text = `Hi ${studentName},\n\n` +
@@ -81,20 +66,15 @@ async function sendMonthlyAlertEmail(toEmail, studentName, subjectTitle, percent
 
     if (note) text += note + '\n\n';
 
-    text += `Please contact the teacher if you have queries.\n\n— SAMS Support`;
+    text += `Please contact your teacher if you have any queries.\n\n— SAMS Support`;
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: toEmail,
-      subject,
-      text
-    });
-
-    console.log(` Sent monthly alert to ${toEmail} (${studentName}) - ${subjectTitle} - ${percentage}%`);
+    await sendEmail({ to: toEmail, subject, text });
+    console.log(`✅ Sent monthly alert to ${toEmail}`);
   } catch (err) {
-    console.error(` Failed to send monthly alert to ${toEmail}:`, err.message || err);
+    console.error(`❌ Failed to send monthly alert:`, err.message || err);
   }
 }
+
 
 // Middleware
 app.use(express.json());
@@ -259,13 +239,12 @@ app.post('/api/forgot-password', async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otpStore[email] = { otp, expires: Date.now() + 5 * 60 * 1000 };
 
-    // Send email
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: `SAMS Password Reset OTP`,
-      text: `Hello ${role},\n\nYour OTP for password reset is: ${otp}\nIt expires in 5 minutes.\n\n- SAMS Support`
-    });
+    await sendEmail({
+  to: email,
+  subject: 'SAMS Password Reset OTP',
+  text: `Hello ${role},\n\nYour OTP for password reset is: ${otp}\nIt expires in 5 minutes.\n\n- SAMS Support`
+});
+
 
     console.log(` OTP for ${email}: ${otp}`);
     res.json({ message: 'OTP sent to your email' });
@@ -1755,22 +1734,23 @@ app.use((req, res) => res.status(404).send('Page not found'));
 app.use((err, req, res, next) => { console.error(err.stack); res.status(500).send('Something went wrong!'); });
 
 
-// ---- TEMPORARY EMAIL TEST ROUTE ----
+
 app.get("/test-email", async (req, res) => {
   try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER, // sends to yourself for testing
+    await sendEmail({
+      to: process.env.REPLY_TO || 'valenciaofficial2005@gmail.com',
       subject: "Render Email Test - SAMS",
-      text: "Your Render app can now send emails successfully!"
+      text: "Your Render app can now send emails successfully via Resend!"
     });
-    console.log("Test email sent successfully!");
+    console.log("✅ Test email sent successfully via Resend");
     res.send("Email sent successfully!");
   } catch (err) {
-    console.error(" Email test failed:", err);
+    console.error("❌ Email test failed:", err);
     res.status(500).send("Failed: " + err.message);
   }
 });
+
+
 
 
 // Start Server
