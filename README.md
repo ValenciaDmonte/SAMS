@@ -119,6 +119,4 @@ Visit: [http://localhost:10000](http://localhost:10000)
 
 
 
----
 
-Would you like me to include a short **"How to connect PostgreSQL via pgAdmin"** section at the end too (for users setting it up locally or on Render)?
