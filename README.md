@@ -116,15 +116,3 @@ Visit: [http://localhost:10000](http://localhost:10000)
 ---
 
 
-
-## Future Enhancements
-
-* Integration with biometric or RFID-based attendance
-* Mobile app version
-* Push notifications and mobile alerts
-
----
-
-
-
-
