@@ -1,6 +1,7 @@
 
 
-# Smart Attendance Management System (SAMS)
+<img width="796" height="533" alt="image" src="https://github.com/user-attachments/assets/a4474db6-e57a-490c-bd0d-379c0ed227ae" />
+
 
 ## Overview
 
