@@ -10,60 +10,91 @@
 </p>
 
 
-## Overview
 
-The **Smart Attendance Management System (SAMS)** is a full-stack web application designed to simplify and automate attendance management in educational institutions. It enables administrators, teachers, and students to efficiently manage classes, schedules, and attendance records, with intelligent notifications and chatbot support for assistance.
+# 🎓 Smart Attendance Management System (SAMS)
 
-The system is built with **Node.js**, **Express**, **PostgreSQL**, and **EJS** for the backend and templating. It integrates **Groq API** for AI-driven chatbot interaction and **Nodemailer** for automated email notifications.
+**Smart Attendance Management System (SAMS)** is a full-stack web application designed to **automate and streamline attendance management** in educational institutions.
+It enables **administrators, teachers, and students** to efficiently manage classes, schedules, and attendance records—enhanced with **AI-powered chatbot assistance** and **intelligent email notifications**.
 
 ---
 
-## Features
+## ✨ Key Highlights
 
-### Admin
+* Role-based system for **Admin, Teacher, and Student**
+* Automated attendance tracking with **real-time alerts**
+* AI chatbot for **personalized attendance insights**
+* Smart defaulter detection and notification system
+
+---
+
+## 🔑 Core Features
+
+### 🛠️ Admin Module
 
 * Manage students, teachers, classes, and subjects
 * Map teachers to subjects and classes
 * Generate and view timetables
-* View system statistics
-* Secure login and role-based access control
+* View system-wide attendance statistics
+* Secure login with role-based access control
 
-### Teacher
+---
 
-* Mark and update attendance for each session
-* View and manage subject-wise attendance reports
-* Export attendance reports as CSV
-* Receive smart alerts for attendance submissions
+### 👨‍🏫 Teacher Module
 
-### Student
+* Mark and update attendance for each lecture/session
+* View subject-wise attendance reports
+* Export attendance reports as **CSV**
+* Receive smart alerts for pending attendance submissions
+
+---
+
+### 🎓 Student Module
 
 * View personalized attendance summaries
-* Interact with the AI-powered SAMS chatbot for attendance queries (e.g., “How many more lectures do I need to reach 75%?”)
-* Receive email notifications when marked absent or when attendance falls below 75%
+* Track attendance percentage across subjects
+* Interact with the **AI-powered SAMS chatbot** for queries like:
+
+  * *“How many more lectures do I need to reach 75%?”*
+  * *“What is my attendance in DBMS?”*
+* Receive automated email alerts for attendance issues
 
 ---
 
-## Notifications
+## 🔔 Intelligent Notification System
 
-* **Attendance Update Notification:** Students receive an email whenever a teacher marks attendance (Present/Absent).
-* **Low Attendance Alert:** Monthly email alert if a student’s attendance in any subject falls below 75%.
-* **Defaulter Alert:** Students receive a warning if missing even one lecture would drop attendance below 75%.
+* **Attendance Update Notification**
+  Students receive an email whenever attendance is marked (Present/Absent).
 
----
+* **Low Attendance Alert**
+  Monthly email alerts if attendance in any subject drops below **75%**.
 
-## AI Chatbot Integration
-
-The chatbot is powered by the **Groq API** using the **LLaMA-3.3-70B Versatile** model.
-It provides personalized responses based on the student’s attendance, subjects, and teachers.
-Example queries include:
-
-* “What is my attendance in DC?”
-* “Who teaches DBMS?”
-* “How many more lectures do I need to reach 75% in CN?”
+* **Defaulter Warning System**
+  Alerts students if missing even **one more lecture** would push attendance below the threshold.
 
 ---
 
-## Tech Stack
+## 🤖 AI Chatbot Integration
+
+The SAMS chatbot is powered by the **Groq API** using the
+**LLaMA-3.3-70B Versatile** model.
+
+### Capabilities:
+
+* Provides **personalized responses** based on:
+
+  * Student attendance data
+  * Subjects and assigned teachers
+* Handles natural language queries such as:
+
+  * *“Who teaches CN?”*
+  * *“How many lectures can I miss?”*
+  * *“What is my current attendance status?”*
+
+This makes attendance tracking **interactive, intuitive, and student-friendly**.
+
+---
+
+## 🛠️ Tech Stack
 
 | Layer           | Technology                  |
 | --------------- | --------------------------- |
@@ -77,24 +108,24 @@ Example queries include:
 
 ---
 
-## Project Setup
+## ⚙️ Project Setup
 
-### 1. Clone Repository
+### 1️⃣ Clone Repository
 
 ```bash
 git clone https://github.com/<your-username>/SAMS.git
 cd SAMS
 ```
 
-### 2. Install Dependencies
+### 2️⃣ Install Dependencies
 
 ```bash
 npm install
 ```
 
-### 3. Configure Environment Variables
+### 3️⃣ Configure Environment Variables
 
-Create a `.env` file in the project root with the following:
+Create a `.env` file in the project root:
 
 ```env
 PORT=10000
@@ -105,14 +136,13 @@ EMAIL_PASS=<your_email_password>
 GROQ_API_KEY=<your_groq_api_key>
 ```
 
-### 4. Run Locally
+### 4️⃣ Run Locally
 
 ```bash
 node index.js
 ```
 
-Visit: [http://localhost:10000](http://localhost:10000)
+Visit: **[http://localhost:10000](http://localhost:10000)**
 
----
 
 
