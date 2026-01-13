@@ -1,6 +1,13 @@
 
 
-<img width="796" height="533" alt="image" src="https://github.com/user-attachments/assets/a4474db6-e57a-490c-bd0d-379c0ed227ae" />
+<p align="center">
+  <img
+    width="796"
+    height="533"
+    alt="SAMS futuristic AI illustration"
+    src="https://github.com/user-attachments/assets/a4474db6-e57a-490c-bd0d-379c0ed227ae"
+  />
+</p>
 
 
 ## Overview
