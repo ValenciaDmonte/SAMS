@@ -96,10 +96,10 @@ if (connectionString) {
 } else {
   // When running locally
   poolConfig = {
-    user: process.env.DB_USER || 'postgres',
-    host: process.env.DB_HOST || 'localhost',
-    database: process.env.DB_NAME || 'sams_db',
-    password: process.env.DB_PASSWORD || '12345',
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT || 5432,
   };
 }
@@ -108,7 +108,7 @@ const pool = new Pool(poolConfig);
 
 
 // JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_change_this';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Test database connection
 pool.query('SELECT NOW()', (err, res) => {
